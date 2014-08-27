@@ -17,6 +17,19 @@ while 1:
   global data
   data = s.recv(1024)
   print data
+  msg = data.split(':')[2]
+  if not msg[0]:
+    command = "nulll"
+  else:
+    command = msg[0]
+  print command
+
+
+def parse():
   nick = data.split('!')[0]
   nick = nick.replace(":", "")
-  print nick
+
+  msg = data.split(':')[2]
+  command = msg[0]
+
+  chan = data.split()[2]
