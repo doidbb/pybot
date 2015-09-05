@@ -303,8 +303,13 @@ class pybot():
 
     """
     function shout
-    if the output is all in caps, MAKE IT LOUD
-    adds that to a database, print a random one to the channel
+    If the message in a channel is in uppercase, this function will be triggered
+    The function loads the database from the file 'shouts.txt'
+    it splits the lines in the file in to an array
+    the output is selected at random from the array
+    if the input isn't already present it is then written to the array
+    newlines are added at random, this is noise from the server that should be ignored - it's easier this way, not intuitive
+    therefore, if the random selection is whitespace the function is invoked again - with a null string
     """
     def shout(self, msg, chan):
         shoutdb = "shouts.txt"
@@ -312,7 +317,7 @@ class pybot():
             with open(shoutdb, 'r+') as shoutDatabase:
                 shouts = shoutDatabase.read().split("\n")
                 output = random.choice(shouts[:-1])
-                if msg not in shouts[:-1]:
+                if msg not in shouts[:-1] or msg == " " or msg == "" :
                     shoutDatabase.write(" " + (str(msg.strip("\r\n"))) )
         else:
             output = " SHOUT DATABASE NOT PRESENT SPASTIC"
