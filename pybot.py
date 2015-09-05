@@ -1,9 +1,9 @@
-#!/usr/bin/env python3.4
+﻿#!/usr/bin/env python3.4
 import socket, re, requests, json, random, os, os.path, random
 from bs4 import BeautifulSoup
 chans    = ['#sadbot-dev', '#/g/summer']#, '#childfree']
 prefixes = ['.', ',', '>', '-', '!']
-commands = ['weather', 'np', 'raw', 'addie']#, 'echo']
+commands = ['weather', 'np', 'raw']#, 'addie']#, 'echo']
 #todo: raw, notify and echo
 #todo: work on string concat in __init__
 
@@ -151,8 +151,6 @@ class pybot():
                 self.sendmsg("Error, last.fm is down!", listu[3], "pmsg")
         elif (listu[4] == "raw") and (sender == True):
             self.sendmsg(self.raw(listu), listu[3], "pmsg")
-        elif (listu[4] == "addie") and (sender == True):
-            self.sendmsg(self.addie(listu[1]), listu[3], "pmsg")
         elif ((listu[4] == ran1) or (listu[4] == ran2)):
             self.sendmsg("That's numberwang!", listu[3], "pmsg")
             noshout = True
@@ -275,45 +273,6 @@ class pybot():
             self.sendmsg("If the now playing is greater than 75 chars, it returns the \x033title\x0f only", listt[3], "pmsg")
         return outt
     """
-    function addoe
-    uses api of addie.cc to find a user's address for cryptocurrencies
-    """
-    def addie(self, inn):
-        address = "http://addie.cc/api/"
-        #use listt[1]
-        stuff = inn.split()
-        username = stuff[1]
-        if len(stuff) == 2:
-            userApiAddress = address + username
-            outAddress = requests.get(userApiAddress)
-            if username.lower() == "help":
-                return "addie username cointype"
-            if outAddress.text == "Username not found.":
-                return "username not found"
-            dictAddressesJson = json.loads(outAddress.text)
-            counter = 0
-            userCoins = []
-            for key in dictAddressesJson:
-                userCoins.append(key)
-                if len(userCoins) == 1:
-                    output = key + ": " + dictAddressesJson[userCoins[0]]
-                elif len(userCoins) > 1:
-                    addCoins = ""
-                    for item in userCoins:
-                        randColor = random.randint(1,10)
-                        randColor = "\x03" + str(randColor)
-                        addCoins += (randColor + item + " ")
-                    output = username + " has " + addCoins
-                else:
-                    output = "User has no coins"
-        elif len(stuff) >= 2:
-            userApiAddress = address + username + "/" + stuff[2].lower()
-            outAddress = requests.get(userApiAddress)
-            output = outAddress.text
-        else: 
-            pass
-        return output
-    """
     parse
     """
     def parseURL(self, url, chan):
@@ -354,12 +313,16 @@ class pybot():
                 shouts = shoutDatabase.read().split("\n")
                 output = random.choice(shouts[:-1])
                 if msg not in shouts[:-1]:
-                    shoutDatabase.write(str(msg.strip("\r\n")))
+                    shoutDatabase.write(" " + (str(msg.strip("\r\n"))) )
         else:
-            output = " Shout database not present!"
-        self.sendmsg(output[1:], chan, "pmsg") #hacky hacky hacky
+            output = " SHOUT DATABASE NOT PRESENT SPASTIC"
+        if output != '':
+            self.sendmsg(output[2:], chan, "pmsg") #hacky hacky hacky
+            shoutDatabase.close()
+        else:
+            print("no data") #muh debug
+            self.shout("",chan)
 
-    
 """
 non class-related items
 initialises bot with own varialbes (perhaps a config file in future)
