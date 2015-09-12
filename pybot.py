@@ -1,9 +1,12 @@
 ﻿#!/usr/bin/env python3.4
 import socket, re, requests, json, random, os, os.path, random
 from bs4 import BeautifulSoup
-chans    = ['#sadbot-dev', '#/g/summer']#, '#childfree']
+from PIL import Image
+from io import StringIO
+chans    = ['#sadbot-dev', '#/g/summer', '#wormhole']#, '#childfree']
 prefixes = ['.', ',', '>', '-', '!']
 commands = ['weather', 'np', 'raw']#, 'addie']#, 'echo']
+images   = ['image/jpeg', 'image/png', 'image/gif','image/jpg']
 #todo: raw, notify and echo
 #todo: work on string concat in __init__
 
@@ -103,18 +106,13 @@ class pybot():
             cmdd = "null"
         if "PING" in mydta:
             self.sendmsg("PONG PING", chan, "msg")
-        print(msg) #msg[1:] == No text to send then shout again
+        #print(msg) #msg[1:] == No text to send then shout again
         listt = [nickV,msg[1:].strip("\r\n"),parseData,chan,cmdd] #indexes 0,1,2,3 are nick, msg, raw, chan
         if join:
             if chan in chans:
                 self.handle(listt)
     """
-    subroutine handle
-    passed list from parse
-    temporary way to test and ensure written modules work
-    todo:
-        improve this doc
-        improve getting weather location
+   this is a fucking mess
     """
     def handle(self, listu): #horrible way of working out - todo: dynamic handling of output
         ran1 = random.randint(1,10)
@@ -128,6 +126,8 @@ class pybot():
                 self.parseYouTube(i, listu[3])
         if "kek" in listu[4].split():
             self.sendmsg("https://www.youtube.com/watch?v=8DfjKtUItsM", listu[3], "pmsg")
+        elif "woof" in listu[4].split():
+            self.sendmsg("\x03"+str(random.randint(1,7))+"woof\x03"+str(random.randint(1,7))+" woof\x03"+str(random.randint(1,7))+" woof", listu[3], "pmsg") #shit nigga
         for cmd in commands:
             if cmd == listu[4]:
                 loc = listu[1].split(" ")
@@ -154,7 +154,7 @@ class pybot():
         elif ((listu[4] == ran1) or (listu[4] == ran2)):
             self.sendmsg("That's numberwang!", listu[3], "pmsg")
             noshout = True
-        elif (listu[1] == listu[1].upper()):
+        elif ((listu[1] == listu[1].upper()) and (len(listu[1]) > 6)):
             self.shout(listu[1],listu[3])#, "pmsg"
         if listu[1] == "No Text to send":
             self.shout(listu[1],listu[3])
@@ -284,6 +284,13 @@ class pybot():
                 soup   = BeautifulSoup(r.content)
                 title  = soup.title.string
                 sender = title + ", " + header
+            elif header in images:
+                imgStream = Image.open(requests.get(url,stream=True).raw)
+                imgDimensions = imgStream.size
+                imgX = str(imgDimensions[0])
+                imgY = str(imgDimensions[1])
+                imgType = imgStream.format
+                sender = "Image type: \x035" + imgType + "\x0f ::: Dimensions:\x036 " + imgX + "\x0f x\x032 " + imgY
             else:
                 sender = header
             self.sendmsg(sender, chan, "pmsg")
@@ -317,8 +324,13 @@ class pybot():
             with open(shoutdb, 'r+') as shoutDatabase:
                 shouts = shoutDatabase.read().split("\n")
                 output = random.choice(shouts[:-1])
-                if msg not in shouts[:-1] or msg == " " or msg == "" :
-                    shoutDatabase.write(" " + (str(msg.strip("\r\n"))) )
+                if msg not in shouts[:-1] or msg not in [ " ", ""] :
+                    try:
+                        shoutDatabase.write((str(" " + (str(msg.strip("\r\n"))))).encode('UTF-8') )
+                    except UnicodeEncodeError: #nice habit faggot
+                        pass
+                    except TypeError:
+                        pass
         else:
             output = " SHOUT DATABASE NOT PRESENT SPASTIC"
         if output != '':
