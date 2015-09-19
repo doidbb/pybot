@@ -210,6 +210,8 @@ class pybot():
                 sec = sec[1:][:1]
             else:
                sec = sec[:2]
+            if len(sec) == 1:
+                sec = "0" + sec
             time = hour+min+sec
             output  = "\x035Title:\x0f " + title + " :::\x037 Views:\x0f " + views + " ::: " + "\x033Duration:\x0f  " + time
             #output  = "\x035Title:\x0f " + title + ";\x037 Views:\x0f " + views + ";\x033 Likes:\x0f " + likes 
