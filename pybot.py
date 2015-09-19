@@ -7,6 +7,7 @@ chans    = ['#sadbot-dev', '#/g/summer', '#wormhole']#, '#childfree']
 prefixes = ['.', ',', '>', '-', '!']
 commands = ['weather', 'np', 'raw']#, 'addie']#, 'echo']
 images   = ['image/jpeg', 'image/png', 'image/gif','image/jpg']
+triggers = ['woof', 'kek','lel','coffee','andri','noice']
 #todo: raw, notify and echo
 #todo: work on string concat in __init__
 
@@ -124,10 +125,10 @@ class pybot():
             matcher = myregex.search(i)
             if matcher:
                 self.parseYouTube(i, listu[3])
-        if "kek" in listu[4].split():
-            self.sendmsg("https://www.youtube.com/watch?v=8DfjKtUItsM", listu[3], "pmsg")
-        elif "woof" in listu[4].split():
-            self.sendmsg("\x03"+str(random.randint(1,7))+"woof\x03"+str(random.randint(1,7))+" woof\x03"+str(random.randint(1,7))+" woof", listu[3], "pmsg") #shit nigga
+        print(str(listu[1].split()))
+        for word in triggers:
+            if word in listu[1].split():
+                self.sendmsg("\x03"+str(random.randint(1,7))+word+"\x03"+str(random.randint(1,7))+" "+word+"\x03"+str(random.randint(1,7))+" "+word, listu[3], "pmsg") #shit nigga
         for cmd in commands:
             if cmd == listu[4]:
                 loc = listu[1].split(" ")
@@ -151,7 +152,8 @@ class pybot():
                 self.sendmsg("Error, last.fm is down!", listu[3], "pmsg")
         elif (listu[4] == "raw") and (sender == True):
             self.sendmsg(self.raw(listu), listu[3], "pmsg")
-        elif ((listu[4] == ran1) or (listu[4] == ran2)):
+        elif ((listu[4] == ran1) or (listu[4] == ran2)): #this decreases the entropy
+
             self.sendmsg("That's numberwang!", listu[3], "pmsg")
             noshout = True
         elif ((listu[1] == listu[1].upper()) and (len(listu[1]) > 6)):
@@ -183,7 +185,7 @@ class pybot():
             self.parseURL(url, chan)  
         #return self.youtube(newsplit)
     def youtube(self, vidID):
-        vidUrl = 'http://gdata.youtube.com/feeds/api/videos/' + vidID + '?v=2&alt=jsonc'
+        vidUrl = "https://www.googleapis.com/youtube/v3/videos?id=" + vidID +"&part=snippet,contentDetails,statistics,status&key=AIzaSyASyfv2jOYgXdDkttlr5kvOuQMBxSuTpSw"
         r = requests.get(vidUrl)
         vidJSON = r.content
         vidJSON = vidJSON.decode('utf-8')
@@ -191,10 +193,26 @@ class pybot():
         if "error" in vidJSON:
             output = "\x034Error with video URL"
         else:
-            title   = vidJSON['data']['title']
-            views   = str(vidJSON['data']['viewCount'])
-            likes   = str(vidJSON['data']['likeCount'])
-            output  = "\x035Title:\x0f " + title + ";\x037 Views:\x0f " + views + ";\x033 Likes:\x0f " + likes 
+            title = vidJSON['items'][0]['snippet']['localized']['title']
+            views = vidJSON['items'][0]['statistics']['viewCount']
+            likes = vidJSON['items'][0]['contentDetails']['duration']
+            likes = likes[2:]
+            hour = ""
+            min  = ""
+            sec  = likes[-3:]
+            if "H" in likes:
+                hour = likes.split("H")[0] + ":"
+            if "H" and "M" in likes:
+                min = likes.split("M")[0][2:] + ":"
+            if ("M" in likes) and ("H" not in likes):
+               min = likes.split("M")[0] + ":"
+            if "M" in sec:
+                sec = sec[1:][:1]
+            else:
+               sec = sec[:2]
+            time = hour+min+sec
+            output  = "\x035Title:\x0f " + title + " :::\x037 Views:\x0f " + views + " ::: " + "\x033Duration:\x0f  " + time
+            #output  = "\x035Title:\x0f " + title + ";\x037 Views:\x0f " + views + ";\x033 Likes:\x0f " + likes 
         return output
 
     """
