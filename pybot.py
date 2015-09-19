@@ -70,6 +70,8 @@ class pybot():
             dta = ""
             dta = mysock.recv(1024) #recieves data in buffer size 1024
             print(repr(dta)) #will have to respond upon ping with pong ping
+            if "To connect type /QUOTE" in (str(dta)).split(":")[2]:
+                self.sendmsg(dta.split("/")[1].split()[1] + " " + dta.split("/")[1].split()[2], "", "msg")
             self.parse(dta)
     """
     function parse
@@ -108,7 +110,7 @@ class pybot():
         if "PING" in mydta:
             self.sendmsg("PONG PING", chan, "msg")
         #print(msg) #msg[1:] == No text to send then shout again
-        listt = [nickV,msg[1:].strip("\r\n"),parseData,chan,cmdd] #indexes 0,1,2,3 are nick, msg, raw, chan
+        listt = [nickV,msg[1:].strip("\r\n"),parseData,chan,cmdd] #indexes 0,1,2,3 are nick, msg, raw, chan, command
         if join:
             if chan in chans:
                 self.handle(listt)
@@ -185,7 +187,7 @@ class pybot():
             self.parseURL(url, chan)  
         #return self.youtube(newsplit)
     def youtube(self, vidID):
-        vidUrl = "https://www.googleapis.com/youtube/v3/videos?id=" + vidID +"&part=snippet,contentDetails,statistics,status&key=AIzaSyASyfv2jOYgXdDkttlr5kvOuQMBxSuTpSw"
+        vidUrl = "https://www.googleapis.com/youtube/v3/videos?id=" + vidID +"&part=snippet,contentDetails,statistics,status&key=AIzaSyASyfv2jOYgXdDkttlr5kvOuQMBxSuTpSw" #have my api key its a gift
         r = requests.get(vidUrl)
         vidJSON = r.content
         vidJSON = vidJSON.decode('utf-8')
@@ -213,7 +215,7 @@ class pybot():
             if len(sec) == 1:
                 sec = "0" + sec
             time = hour+min+sec
-            output  = "\x035Title:\x0f " + title + " :::\x037 Views:\x0f " + views + " ::: " + "\x033Duration:\x0f  " + time
+            output  = "\x035Title:\x0f " + title + " :::\x037 Views:\x0f " + views + " ::: " + "\x033Duration:\x0f " + time
             #output  = "\x035Title:\x0f " + title + ";\x037 Views:\x0f " + views + ";\x033 Likes:\x0f " + likes 
         return output
 
