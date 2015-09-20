@@ -1,8 +1,9 @@
 ﻿#!/usr/bin/env python3.4
-import socket, re, requests, json, random, os, os.path, random
+import socket, re, requests, json, random, os, os.path, random,datetime
 from bs4 import BeautifulSoup
 from PIL import Image
 from io import StringIO
+from isodate import parse_duration
 chans    = ['#sadbot-dev', '#/g/summer', '#wormhole']#, '#childfree']
 prefixes = ['.', ',', '>', '-', '!']
 commands = ['weather', 'np', 'raw']#, 'addie']#, 'echo']
@@ -116,7 +117,8 @@ class pybot():
         listt = [nickV,msg[1:].strip("\r\n"),parseData,chan,cmdd] #indexes 0,1,2,3 are nick, msg, raw, chan, command
         if join:
             if chan in chans:
-                self.handle(listt)
+                if len(parseData) < 150:
+                    self.handle(listt)
     """
    this is a fucking mess
     """
@@ -194,29 +196,10 @@ class pybot():
             title = vidJSON['items'][0]['snippet']['localized']['title']
             views = vidJSON['items'][0]['statistics']['viewCount']
             dur = vidJSON['items'][0]['contentDetails']['duration']
-            dur = dur[2:]
-            hour  = ""
-            min   = ""
-            sec   = dur[-3:]
-            #so much could go wrong here
-            #a smarter solution is required
-            if "H" in dur:
-                hour = dur.split("H")[0] + ":"
-            if "H" and "M" in dur:
-                min = dur.split("M")[0][2:] + ":"
-            if ("M" in dur) and ("H" not in dur):
-               min = dur.split("M")[0] + ":"
-            if "H" in dur and "M" not in dur:
-                hour = dur.split("H")[0] + ":"
-                min  = "00"
-            if "M" in sec:
-                sec = sec[1:][:1]
-            else:
-               sec = sec[:2]
-            if len(sec) == 1:
-                sec = "0" + sec
-            time = hour+min+sec
-            output  = "\x035Title:\x0f " + title + " :::\x037 Views:\x0f " + views + " ::: " + "\x033Duration:\x0f " + time
+            dur = parse_duration(dur)
+            timesecs = dur.total_seconds()
+            dur = str(datetime.timedelta(seconds=timesecs))
+            output  = "\x035Title:\x0f " + title + " :::\x037 Views:\x0f " + views + " ::: " + "\x033Duration:\x0f " + dur
         return output
     """
     function chanGrab
@@ -249,7 +232,7 @@ class pybot():
         portsmouth GB rather than portsmouth US
     todo:
         option for weather in Farenheit
-        ensure better parsing of location
+           ensure better parsing of location
         split up chat so that can respond with 'i wonder what weather is like in n'
     """
     def weather(self, location): #i dont' like json. i like parsing using arrays
