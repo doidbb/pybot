@@ -70,8 +70,11 @@ class pybot():
             dta = ""
             dta = mysock.recv(1024) #recieves data in buffer size 1024
             print(repr(dta)) #will have to respond upon ping with pong ping
-            if "To connect type /QUOTE" in (str(dta)).split(":")[2]:
-                self.sendmsg(dta.split("/")[1].split()[1] + " " + dta.split("/")[1].split()[2], "", "msg")
+            try:
+                if "To connect type /QUOTE" in (str(dta)).split(":")[2]:
+                    self.sendmsg(bytes(dta.split("/")[1].split()[1] + " " + dta.split("/")[1].split()[2],'UTF-8'), "", "msg")
+            except IndexError:
+                pass
             self.parse(dta)
     """
     function parse
@@ -188,10 +191,7 @@ class pybot():
         #return self.youtube(newsplit)
     def youtube(self, vidID):
         vidUrl = "https://www.googleapis.com/youtube/v3/videos?id=" + vidID +"&part=snippet,contentDetails,statistics,status&key=AIzaSyASyfv2jOYgXdDkttlr5kvOuQMBxSuTpSw" #have my api key its a gift
-        r = requests.get(vidUrl)
-        vidJSON = r.content
-        vidJSON = vidJSON.decode('utf-8')
-        vidJSON = json.loads(vidJSON)
+        vidJSON = self.jsonify(vidUrl)
         if "error" in vidJSON:
             output = "\x034Error with video URL"
         else:
@@ -235,7 +235,6 @@ class pybot():
     """
     def weather(self, location): #i dont' like json. i like parsing using arrays
         url         = 'http://api.openweathermap.org/data/2.5/weather?q=' + location #+ '&mode=xml' #I don't like json - actually i love it
-        userWeather = requests.get(url)
         userWeather = json.loads(userWeather.text)
         if userWeather['cod'] == "404":
             strweather  = "Error, no such location"
@@ -272,10 +271,8 @@ class pybot():
         add validation for username
     """
     def np(self, user):
-        url        = "http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=" + user  + "&api_key=381fb912a58423616770ce82239bc41b&format=json"
-        userInfo   = requests.get(url)
-        userInfo   = userInfo.text
-        userInfo   = json.loads(userInfo)
+        url      = "http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=" + user  + "&api_key=381fb912a58423616770ce82239bc41b&format=json"
+        userInfo = self.jsonify(url)
         try:
             artist = userInfo["recenttracks"]['track'][0]['artist']['#text']
             album  = userInfo["recenttracks"]['track'][0]['album']['#text']
@@ -361,7 +358,18 @@ class pybot():
         else:
             print("no data") #muh debug
             self.shout("",chan)
-
+    """
+    subroutine jsonify
+    paramater is the url
+    this subroutine is used to request the contents of a webpage and stick it in to json form
+    the website is gotten with requests.get and then put in to a dict with json.loads
+    """
+    def jsonify(self,url):
+        r          = requests.get(url)
+        jsonContent= r.content
+        jsonContent = jsonContent.decode('utf-8')
+        jsonContent = json.loads(jsonContent)
+        return jsonContent
 """
 non class-related items
 initialises bot with own varialbes (perhaps a config file in future)
