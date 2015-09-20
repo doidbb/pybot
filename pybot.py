@@ -176,14 +176,10 @@ class pybot():
         split = url.split("https://www.youtube.com/watch?v=")
         if len(split) == 1:
             split = url.split("http://youtu.be/")
-            if len(split) == 1:
-                pass
-            else:
+            if len(split) != 1:
                 newsplit = split[1]
-        if len(split) > 1:
+        elif len(split) > 1:
             newsplit = split[1]
-        else:
-            notyoutube = True
         if newsplit != "none":
             self.sendmsg(self.youtube(newsplit), chan, "pmsg")
         else:
@@ -197,21 +193,21 @@ class pybot():
         else:
             title = vidJSON['items'][0]['snippet']['localized']['title']
             views = vidJSON['items'][0]['statistics']['viewCount']
-            likes = vidJSON['items'][0]['contentDetails']['duration']
-            likes = likes[2:]
-            hour = ""
-            min  = ""
-            sec  = likes[-3:]
+            dur = vidJSON['items'][0]['contentDetails']['duration']
+            dur = dur[2:]
+            hour  = ""
+            min   = ""
+            sec   = dur[-3:]
             #so much could go wrong here
             #a smarter solution is required
-            if "H" in likes:
-                hour = likes.split("H")[0] + ":"
-            if "H" and "M" in likes:
-                min = likes.split("M")[0][2:] + ":"
-            if ("M" in likes) and ("H" not in likes):
-               min = likes.split("M")[0] + ":"
-            if "H" in likes and "M" not in likes:
-                hour = likes.split("H")[0] + ":"
+            if "H" in dur:
+                hour = dur.split("H")[0] + ":"
+            if "H" and "M" in dur:
+                min = dur.split("M")[0][2:] + ":"
+            if ("M" in dur) and ("H" not in dur):
+               min = dur.split("M")[0] + ":"
+            if "H" in dur and "M" not in dur:
+                hour = dur.split("H")[0] + ":"
                 min  = "00"
             if "M" in sec:
                 sec = sec[1:][:1]
@@ -221,7 +217,6 @@ class pybot():
                 sec = "0" + sec
             time = hour+min+sec
             output  = "\x035Title:\x0f " + title + " :::\x037 Views:\x0f " + views + " ::: " + "\x033Duration:\x0f " + time
-            #output  = "\x035Title:\x0f " + title + ";\x037 Views:\x0f " + views + ";\x033 Likes:\x0f " + likes 
         return output
     """
     function chanGrab
@@ -232,7 +227,7 @@ class pybot():
         newsplit = url.split("boards.4chan.org")
         print(newsplit)
         if len(newsplit) > 1:
-            newsplit = url.split("/")
+            newsplit   = url.split("/")
             print(newsplit[5])
             chanURL    = "https://a.4cdn.org/"+newsplit[3]+"/thread/"+newsplit[5]+".json"
             chanJSON   = self.jsonify(chanURL)
@@ -254,7 +249,6 @@ class pybot():
         portsmouth GB rather than portsmouth US
     todo:
         option for weather in Farenheit
-        add hacky way to remove &mode=xml to ensure that the bot doesn't crash
         ensure better parsing of location
         split up chat so that can respond with 'i wonder what weather is like in n'
     """
@@ -350,6 +344,10 @@ class pybot():
         note to me
         you're lazy, stupid
         fix the regex
+        edit: 
+            delegating the fixing to future me
+            this code is a fucking mess
+            -HJF 20/06/2015
         """
 
     """
