@@ -187,7 +187,7 @@ class pybot():
         if newsplit != "none":
             self.sendmsg(self.youtube(newsplit), chan, "pmsg")
         else:
-            self.parseURL(url, chan)  
+            self.chanGrab(url, chan)  
         #return self.youtube(newsplit)
     def youtube(self, vidID):
         vidUrl = "https://www.googleapis.com/youtube/v3/videos?id=" + vidID +"&part=snippet,contentDetails,statistics,status&key=AIzaSyASyfv2jOYgXdDkttlr5kvOuQMBxSuTpSw" #have my api key its a gift
@@ -202,12 +202,17 @@ class pybot():
             hour = ""
             min  = ""
             sec  = likes[-3:]
+            #so much could go wrong here
+            #a smarter solution is required
             if "H" in likes:
                 hour = likes.split("H")[0] + ":"
             if "H" and "M" in likes:
                 min = likes.split("M")[0][2:] + ":"
             if ("M" in likes) and ("H" not in likes):
                min = likes.split("M")[0] + ":"
+            if "H" in likes and "M" not in likes:
+                hour = likes.split("H")[0] + ":"
+                min  = "00"
             if "M" in sec:
                 sec = sec[1:][:1]
             else:
@@ -218,7 +223,27 @@ class pybot():
             output  = "\x035Title:\x0f " + title + " :::\x037 Views:\x0f " + views + " ::: " + "\x033Duration:\x0f " + time
             #output  = "\x035Title:\x0f " + title + ";\x037 Views:\x0f " + views + ";\x033 Likes:\x0f " + likes 
         return output
-
+    """
+    function chanGrab
+    gets information regarding a post on 4chan
+    probably requires some validation when someone in irc makes it do something it's not meant to do
+    """
+    def chanGrab(self,url,chan):
+        newsplit = url.split("boards.4chan.org")
+        print(newsplit)
+        if len(newsplit) > 1:
+            newsplit = url.split("/")
+            print(newsplit[5])
+            chanURL    = "https://a.4cdn.org/"+newsplit[3]+"/thread/"+newsplit[5]+".json"
+            chanJSON   = self.jsonify(chanURL)
+            threadInfo = chanJSON['posts'][0]
+            threadno   = str(threadInfo['no'])
+            name       = threadInfo['name']
+            replies    = str(threadInfo['replies'])
+            output     = "\x035Board:\x0f "+newsplit[3]+" ::: \x037Thread Number:\x0f "+threadno+" ::: \x033Posted by:\x0f "+name+" ::: \x034Reply Count:\x0f "+replies
+            self.sendmsg(output,chan,"pmsg")
+        else:
+            self.parseURL(url,chan)
     """
     function weather
     possibly moved to own file as module
@@ -375,7 +400,7 @@ non class-related items
 initialises bot with own varialbes (perhaps a config file in future)
 should chain init to join to showing data
 """
-newbot = pybot("sadbot", "irc.rizon.net", 6667) 
+newbot = pybot("sadbott", "irc.rizon.net", 6667) 
 #otherbot = pybot("nigger", "irc.freenode.net", 6697) #ow do i into multiplexing
 newbot.init_conn()
 newbot.chan_join(chans)
