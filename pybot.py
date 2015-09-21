@@ -4,15 +4,15 @@ from bs4 import BeautifulSoup
 from PIL import Image
 from io import StringIO
 from isodate import parse_duration
-chans    = ['#sadbot-dev', '#/g/summer', '#wormhole']#, '#childfree']
-prefixes = ['.', ',', '>', '-', '!']
-commands = ['weather', 'np', 'raw']#, 'addie']#, 'echo']
-images   = ['image/jpeg', 'image/png', 'image/gif','image/jpg']
-triggers = ['woof', 'kek','lel','coffee','andri','noice']
-#todo: raw, notify and echo
-#todo: work on string concat in __init__
+chans    = ('#sadbot-dev', '#/g/summer', '#wormhole')
+images   = ('image/jpeg', 'image/png', 'image/gif','image/jpg')
+triggers = ('woof', 'kek','lel','coffee','andri','noice')
+prefixes = (':','!','.',';')
+commands = ('weather', 'np', 'raw')
 
 class pybot():
+    global sender 
+    sender = True
     def __init__(self, nick, server, port):
         self.nick   = nick
         self.server = server
@@ -64,18 +64,12 @@ class pybot():
     infinite loop, recieves data then prints it to terminal
     todo: 
         pretty formatting
-        as recieving data, ensure to ping back - possibly in sendmsg()?
     """
     def showdata(self):
         while 1: #loops so program doesn't quit after one msg
             dta = ""
             dta = mysock.recv(1024) #recieves data in buffer size 1024
             print(repr(dta)) #will have to respond upon ping with pong ping
-            try:
-                if "To connect type /QUOTE" in (str(dta)).split(":")[2]:
-                    self.sendmsg(bytes(dta.split("/")[1].split()[1] + " " + dta.split("/")[1].split()[2],'UTF-8'), "", "msg")
-            except IndexError:
-                pass
             self.parse(dta)
     """
     function parse
@@ -123,6 +117,9 @@ class pybot():
    this is a fucking mess
     """
     def handle(self, listu): #horrible way of working out - todo: dynamic handling of output
+        global sender
+        global loc
+        loc = ""
         ran1 = random.randint(1,10)
         ran2 = random.randint(1,5)
         myregex = re.compile("(https?://)?(-\.)?([^\s/?\.#-]+\.?)+(/[^\s]*)")
@@ -144,20 +141,21 @@ class pybot():
                     sender = False
                 else:
                     sender = True
-                    loc    = ''.join(loc[1])
-                    loc    = loc.strip('\r\n') #should really remove this upon sending and recieving
-        #print(listu[4].encode('utf-8').strip())
-
-        #for pre in prefixes:
-        if (listu[4] == "weather") and (sender == True):
+        if sender:
+            loc = ''.join(listu[1].split(" ")[1])
+            loc = loc.strip('\r\n') 
+        for pre in prefixes:
+            cmd = listu[4]
+            if (cmd == pre+"weather") and (sender == True):
                 self.sendmsg(self.weather(loc), listu[3], "pmsg")
-        elif (listu[4] == "np") and (sender == True):
+            elif (cmd == pre+"np") and (sender == True):
             #try routine here ensures that the bot does not crash if/when last.fm is down
-            try:
-                self.sendmsg(self.np(loc), listu[3], "pmsg")
-            except requests.exceptions.ConnectionError:
-                self.sendmsg("Error, last.fm is down!", listu[3], "pmsg")
-        elif (listu[4] == "raw") and (sender == True):
+                try:
+                    self.sendmsg(self.np(loc), listu[3], "pmsg")
+                except requests.exceptions.ConnectionError:
+                    self.sendmsg("Error, last.fm is down!", listu[3], "pmsg")
+            cmd = ""
+        if (listu[4] == "raw") and (sender == True):
             self.sendmsg(self.raw(listu), listu[3], "pmsg")
         elif ((listu[4] == ran1) or (listu[4] == ran2)): #this decreases the entropy
 
@@ -208,10 +206,10 @@ class pybot():
     """
     def chanGrab(self,url,chan):
         newsplit = url.split("boards.4chan.org")
-        print(newsplit)
+        #print(newsplit)
         if len(newsplit) > 1:
             newsplit   = url.split("/")
-            print(newsplit[5])
+            #print(newsplit[5])
             chanURL    = "https://a.4cdn.org/"+newsplit[3]+"/thread/"+newsplit[5]+".json"
             chanJSON   = self.jsonify(chanURL)
             threadInfo = chanJSON['posts'][0]
@@ -237,7 +235,7 @@ class pybot():
     """
     def weather(self, location): #i dont' like json. i like parsing using arrays
         url         = 'http://api.openweathermap.org/data/2.5/weather?q=' + location #+ '&mode=xml' #I don't like json - actually i love it
-        userWeather = json.loads(userWeather.text)
+        userWeather = self.jsonify(url)
         if userWeather['cod'] == "404":
             strweather  = "Error, no such location"
         else:
@@ -284,7 +282,6 @@ class pybot():
         except KeyError:
             outt   = "no user found"
         if len(outt) > 75:
-            #A JOB FOR CAPTAIN RECURSION YOU RETARD
             outt   = user + " is now listening to \x033" + track + "\x0f by \x036" + artist
             if len(outt) > 75:
                 outt = user + " is now listening to \x033" + track
@@ -381,8 +378,7 @@ non class-related items
 initialises bot with own varialbes (perhaps a config file in future)
 should chain init to join to showing data
 """
-newbot = pybot("sadbott", "irc.rizon.net", 6667) 
-#otherbot = pybot("nigger", "irc.freenode.net", 6697) #ow do i into multiplexing
+newbot = pybot("sadbot", "irc.rizon.net", 6667) 
 newbot.init_conn()
 newbot.chan_join(chans)
 newbot.showdata()
