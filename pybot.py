@@ -123,7 +123,7 @@ class pybot():
         ran1 = random.randint(1,10)
         ran2 = random.randint(1,5)
         myregex = re.compile("(https?://)?(-\.)?([^\s/?\.#-]+\.?)+(/[^\s]*)")
-        print(listu[4].encode("utf-8"))
+        print(listu[4].encode("utf-8",'ignore'))
         splitt = listu[4].split(" ")
         for i in splitt:
             matcher = myregex.search(i)
@@ -199,6 +199,10 @@ class pybot():
             dur = str(datetime.timedelta(seconds=timesecs))
             output  = "\x035Title:\x0f " + title + " :::\x037 Views:\x0f " + views + " ::: " + "\x033Duration:\x0f " + dur
         return output
+    def checkvid(self,vid):
+        if vid[-1] == "#":
+            pass
+
     """
     function chanGrab
     gets information regarding a post on 4chan
@@ -348,7 +352,7 @@ class pybot():
                 output = random.choice(shouts[:-1])
                 if msg not in shouts[:-1] or msg not in [ " ", ""] :
                     try:
-                        shoutDatabase.write((str(" " + (str(msg.strip("\r\n"))))).encode('UTF-8') )
+                        shoutDatabase.write((str(" " + (str(msg.strip("\r\n"))))).encode('UTF-8','ignore') )
                     except UnicodeEncodeError: #nice habit faggot
                         pass
                     except TypeError:
