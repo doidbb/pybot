@@ -125,7 +125,7 @@ class pybot():
         ran1 = random.randint(1,10)
         ran2 = random.randint(1,5)
         myregex = re.compile("(https?://)?(-\.)?([^\s/?\.#-]+\.?)+(/[^\s]*)")
-        print(listu[4].encode("utf-8",'ignore'))
+        print(listu[4])
         splitt = listu[4].split(" ")
         for i in splitt:
             matcher = myregex.search(i)
