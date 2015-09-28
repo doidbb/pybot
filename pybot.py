@@ -1,9 +1,11 @@
 ﻿#!/usr/bin/env python3.4
-import socket, re, requests, json, random, os, os.path, random,datetime
+import socket, re, requests, json, random, os, os.path, random,datetime, sys
 from bs4 import BeautifulSoup
 from PIL import Image
 from io import StringIO
 from isodate import parse_duration
+reload(sys)
+sys.setdefaultencoding("utf-8")
 chans    = ('#sadbot-dev', '#/g/summer', '#wormhole')
 images   = ('image/jpeg', 'image/png', 'image/gif','image/jpg')
 triggers = ('woof', 'kek','lel','coffee','andri','noice')
