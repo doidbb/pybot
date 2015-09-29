@@ -1,11 +1,9 @@
-﻿#!/usr/bin/env python3.4
-import socket, re, requests, json, random, os, os.path, random,datetime, sys
+﻿#!/usr/bin/python3
+import socket, re, requests, json, random, os, os.path, random,datetime
 from bs4 import BeautifulSoup
 from PIL import Image
 from io import StringIO
 from isodate import parse_duration
-reload(sys)
-sys.setdefaultencoding("utf-8")
 chans    = ('#sadbot-dev', '#/g/summer', '#wormhole')
 images   = ('image/jpeg', 'image/png', 'image/gif','image/jpg')
 triggers = ('woof', 'kek','lel','coffee','andri','noice')
@@ -71,7 +69,7 @@ class pybot():
         while 1: #loops so program doesn't quit after one msg
             dta = ""
             dta = mysock.recv(1024) #recieves data in buffer size 1024
-            print(repr(dta)) #will have to respond upon ping with pong ping
+            print(repr(dta).encode('UTF-8')) #will have to respond upon ping with pong ping
             self.parse(dta)
     """
     function parse
@@ -125,7 +123,7 @@ class pybot():
         ran1 = random.randint(1,10)
         ran2 = random.randint(1,5)
         myregex = re.compile("(https?://)?(-\.)?([^\s/?\.#-]+\.?)+(/[^\s]*)")
-        print(listu[4])
+        print(listu[4].encode('UTF-8'))
         splitt = listu[4].split(" ")
         for i in splitt:
             matcher = myregex.search(i)
