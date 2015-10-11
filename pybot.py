@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 from PIL import Image
 from io import StringIO
 from isodate import parse_duration
-chans    = ('#sadbot-dev', '#/g/summer', '#wormhole')
+chans    = ('#sadbot-dev', '#wormhole')
 images   = ('image/jpeg', 'image/png', 'image/gif','image/jpg')
 triggers = ('woof', 'kek','lel','coffee','andri','noice')
 prefixes = (':','!','.',';')
@@ -129,7 +129,7 @@ class pybot():
             matcher = myregex.search(i)
             if matcher:
                 self.parseYouTube(i, listu[3])
-        print(str(listu[1].split()))
+        print(str(listu[1].split()).encode('utf-8'))
         for word in triggers:
             if word in listu[1].split():
                 self.sendmsg("\x03"+str(random.randint(1,7))+word+"\x03"+str(random.randint(1,7))+" "+word+"\x03"+str(random.randint(1,7))+" "+word, listu[3], "pmsg") #shit nigga
@@ -212,6 +212,9 @@ class pybot():
         newsplit = url.split("boards.4chan.org")
         #print(newsplit)
         if len(newsplit) > 1:
+            maybesplit = url.split("#")
+            if len(maybesplit) > 1:
+                url    = maybesplit[0]
             newsplit   = url.split("/")
             #print(newsplit[5])
             chanURL    = "https://a.4cdn.org/"+newsplit[3]+"/thread/"+newsplit[5]+".json"
@@ -356,6 +359,8 @@ class pybot():
                     except UnicodeEncodeError: #nice habit faggot
                         pass
                     except TypeError:
+                        pass
+                    except UnicodeDecodeError:
                         pass
         else:
             output = " SHOUT DATABASE NOT PRESENT SPASTIC"
