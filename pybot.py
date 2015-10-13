@@ -146,9 +146,9 @@ class pybot():
             loc = loc.strip('\r\n') 
         for pre in prefixes:
             cmd = listu[4]
-            if (cmd == pre+"weather") and (sender == True):
-                self.sendmsg(self.weather(loc), listu[3], "pmsg")
-            elif (cmd == pre+"np") and (sender == True):
+            #if (cmd == pre+"weather") and (sender == True):
+            #    self.sendmsg(self.weather(loc), listu[3], "pmsg")
+            if (cmd == pre+"np") and (sender == True):
             #try routine here ensures that the bot does not crash if/when last.fm is down
                 try:
                     self.sendmsg(self.np(loc), listu[3], "pmsg")
@@ -190,6 +190,8 @@ class pybot():
         vidJSON = self.jsonify(vidUrl)
         if "error" in vidJSON:
             output = "\x034Error with video URL"
+        elif vidJSON == "Error":
+            output = "\x034Error with video URL"
         else:
             title = vidJSON['items'][0]['snippet']['localized']['title']
             views = vidJSON['items'][0]['statistics']['viewCount']
@@ -219,12 +221,13 @@ class pybot():
             #print(newsplit[5])
             chanURL    = "https://a.4cdn.org/"+newsplit[3]+"/thread/"+newsplit[5]+".json"
             chanJSON   = self.jsonify(chanURL)
-            threadInfo = chanJSON['posts'][0]
-            threadno   = str(threadInfo['no'])
-            name       = threadInfo['name']
-            replies    = str(threadInfo['replies'])
-            output     = "\x035Board:\x0f "+newsplit[3]+" ::: \x037Thread Number:\x0f "+threadno+" ::: \x033Posted by:\x0f "+name+" ::: \x034Reply Count:\x0f "+replies
-            self.sendmsg(output,chan,"pmsg")
+            if chanJSON != "Error":
+                threadInfo = chanJSON['posts'][0]
+                threadno   = str(threadInfo['no'])
+                name       = threadInfo['name']
+                replies    = str(threadInfo['replies'])
+                output     = "\x035Board:\x0f "+newsplit[3]+" ::: \x037Thread Number:\x0f "+threadno+" ::: \x033Posted by:\x0f "+name+" ::: \x034Reply Count:\x0f "+replies
+                self.sendmsg(output,chan,"pmsg")
         else:
             self.parseURL(url,chan)
     """
@@ -280,22 +283,27 @@ class pybot():
     def np(self, user):
         url      = "http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=" + user  + "&api_key=381fb912a58423616770ce82239bc41b&format=json"
         userInfo = self.jsonify(url)
-        try:
-            artist = userInfo["recenttracks"]['track'][0]['artist']['#text']
-            album  = userInfo["recenttracks"]['track'][0]['album']['#text']
-            track  = userInfo["recenttracks"]['track'][0]['name']
-            outt   = user + " is now listening to \x035" + track + "\x0f by \x036" + artist + "\x0f on \x032" + album
-            outt   = outt[:80]
-        except KeyError:
-            outt   = "no user found"
-        if len(outt) > 75:
-            outt   = user + " is now listening to \x033" + track + "\x0f by \x036" + artist
+        if userInfo != "Error":
+            try:
+                artist = userInfo["recenttracks"]['track'][0]['artist']['#text']
+                album  = userInfo["recenttracks"]['track'][0]['album']['#text']
+                track  = userInfo["recenttracks"]['track'][0]['name']
+                outt   = user + " is now listening to \x035" + track + "\x0f by \x036" + artist + "\x0f on \x032" + album
+                outt   = outt[:80]
+            except KeyError:
+                outt   = "no user found"
+            except IndexError:
+                outt   = "no user found"
             if len(outt) > 75:
-                outt = user + " is now listening to \x033" + track
-        if user == "help":
-            outt   = " "
-            self.sendmsg("Usage: np $USERNAME", listt[3], "pmsg")
-            self.sendmsg("If the now playing is greater than 75 chars, it returns the \x033title\x0f only", listt[3], "pmsg")
+                outt   = user + " is now listening to \x033" + track + "\x0f by \x036" + artist
+                if len(outt) > 75:
+                    outt = user + " is now listening to \x033" + track
+            if user == "help":
+                outt   = " "
+                self.sendmsg("Usage: np $USERNAME", listt[3], "pmsg")
+                self.sendmsg("If the now playing is greater than 75 chars, it returns the \x033title\x0f only", listt[3], "pmsg")
+        else:
+            outt = "Error with request"
         return outt
     """
     parse
@@ -350,18 +358,23 @@ class pybot():
     def shout(self, msg, chan):
         shoutdb = "shouts.txt"
         if os.path.isfile(shoutdb):
-            with open(shoutdb, 'r+') as shoutDatabase:
-                shouts = shoutDatabase.read().split("\n")
-                output = random.choice(shouts[:-1])
-                if msg not in shouts[:-1] or msg not in [ " ", ""] :
-                    try:
-                        shoutDatabase.write((str(" " + (str(msg.strip("\r\n"))))).encode('UTF-8','ignore') )
-                    except UnicodeEncodeError: #nice habit faggot
-                        pass
-                    except TypeError:
-                        pass
-                    except UnicodeDecodeError:
-                        pass
+            shoutDatabase = open(shoutdb, 'r+')
+            shoutDB = shoutDatabase.readlines()
+            output = random.choice(shoutDB[:-1])
+            if msg not in shoutDB[:-1] or msg not in [" ", ""]:
+                print(str(msg).strip("\r\n"), file=shoutDatabase)
+            #with open(shoutdb, 'r+') as shoutDatabase:
+            #    shouts = shoutDatabase.read().split("\n")
+            #    output = random.choice(shouts[:-1])
+            #    if msg not in shouts[:-1] or msg not in [ " ", ""] :
+            #        try:
+            #            shoutDatabase.write((str(" " + (str(msg.strip("\r\n"))))).encode('UTF-8','ignore') )
+            #        except UnicodeEncodeError: #nice habit faggot
+            #            pass
+            #        except TypeError:
+            #            pass
+            #        except UnicodeDecodeError:
+            #            pass
         else:
             output = " SHOUT DATABASE NOT PRESENT SPASTIC"
         if output != '':
@@ -377,10 +390,15 @@ class pybot():
     the website is gotten with requests.get and then put in to a dict with json.loads
     """
     def jsonify(self,url):
-        r          = requests.get(url)
-        jsonContent= r.content
-        jsonContent = jsonContent.decode('utf-8')
-        jsonContent = json.loads(jsonContent)
+        try:
+            r           = requests.get(url)
+            jsonContent = r.content
+            jsonContent = jsonContent.decode('utf-8')
+            jsonContent = json.loads(jsonContent)
+        except ValueError:
+            jsonContent = "Error"
+        except TypeError:
+            jsonContent = "Error"
         return jsonContent
 """
 non class-related items
