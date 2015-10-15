@@ -162,7 +162,7 @@ class pybot():
             self.sendmsg("That's numberwang!", listu[3], "pmsg")
             noshout = True
         elif ((listu[1] == listu[1].upper()) and (len(listu[1]) > 6)):
-            self.shout(listu[1],listu[3])#, "pmsg"
+            self.sendmsg(self.shout(listu[1],listu[3]),listu[3], "pmsg")#, "pmsg"
         if listu[1] == "No Text to send":
             self.shout(listu[1],listu[3])
         noshout = False
@@ -357,32 +357,16 @@ class pybot():
     """
     def shout(self, msg, chan):
         shoutdb = "shouts.txt"
-        if os.path.isfile(shoutdb):
-            shoutDatabase = open(shoutdb, 'r+')
-            shoutDB = shoutDatabase.readlines()
-            output = random.choice(shoutDB[:-1])
-            if msg not in shoutDB[:-1] or msg not in [" ", ""]:
-                print(str(msg).strip("\r\n"), file=shoutDatabase)
-            #with open(shoutdb, 'r+') as shoutDatabase:
-            #    shouts = shoutDatabase.read().split("\n")
-            #    output = random.choice(shouts[:-1])
-            #    if msg not in shouts[:-1] or msg not in [ " ", ""] :
-            #        try:
-            #            shoutDatabase.write((str(" " + (str(msg.strip("\r\n"))))).encode('UTF-8','ignore') )
-            #        except UnicodeEncodeError: #nice habit faggot
-            #            pass
-            #        except TypeError:
-            #            pass
-            #        except UnicodeDecodeError:
-            #            pass
-        else:
-            output = " SHOUT DATABASE NOT PRESENT SPASTIC"
-        if output != '':
-            self.sendmsg(output[2:], chan, "pmsg") #hacky hacky hacky
-            shoutDatabase.close()
-        else:
-            print("no data") #muh debug
-            self.shout("",chan)
+        shoutDatabase = open(shoutdb, 'r+')
+        shoutDB = shoutDatabase.readlines()
+        output = ""
+        while ((output == "") or (output == " ")):
+            output = random.choice(shoutDB)
+        if msg not in shoutDB[:-1] or msg not in [" ", ""]:
+            print(str(msg).strip("\r\n")[:-1], file=shoutDatabase, end="")
+        shoutDatabase.close()
+        
+        return output
     """
     subroutine jsonify
     paramater is the url
