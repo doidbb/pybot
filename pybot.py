@@ -146,8 +146,8 @@ class pybot():
             loc = loc.strip('\r\n') 
         for pre in prefixes:
             cmd = listu[4]
-            #if (cmd == pre+"weather") and (sender == True):
-            #    self.sendmsg(self.weather(loc), listu[3], "pmsg")
+            if (cmd == pre+"weather") and (sender == True):
+                self.sendmsg(self.weather(loc), listu[3], "pmsg")
             if (cmd == pre+"np") and (sender == True):
             #try routine here ensures that the bot does not crash if/when last.fm is down
                 try:
@@ -161,7 +161,7 @@ class pybot():
 
             self.sendmsg("That's numberwang!", listu[3], "pmsg")
             noshout = True
-        elif ((listu[1] == listu[1].upper()) and (len(listu[1]) > 6)):
+        elif ((listu[1] == listu[1].upper()) and (len(listu[1]) > 8)):
             self.sendmsg(self.shout(listu[1],listu[3]),listu[3], "pmsg")#, "pmsg"
         if listu[1] == "No Text to send":
             self.shout(listu[1],listu[3])
@@ -244,7 +244,7 @@ class pybot():
         split up chat so that can respond with 'i wonder what weather is like in n'
     """
     def weather(self, location): #i dont' like json. i like parsing using arrays
-        url         = 'http://api.openweathermap.org/data/2.5/weather?q=' + location #+ '&mode=xml' #I don't like json - actually i love it
+        url         = 'http://api.openweathermap.org/data/2.5/weather?q=' + location + "&appid=bbc67f01cffb0e40951dbab4a4e69a87"#+ '&mode=xml' #I don't like json - actually i love it
         userWeather = self.jsonify(url)
         if userWeather['cod'] == "404":
             strweather  = "Error, no such location"
