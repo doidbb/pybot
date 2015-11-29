@@ -6,7 +6,7 @@ from io import StringIO
 from isodate import parse_duration
 chans    = ('#sadbot-dev', '#wormhole')
 images   = ('image/jpeg', 'image/png', 'image/gif','image/jpg')
-triggers = ('woof', 'kek','lel','coffee','andri','noice')
+triggers = ('woof', 'kek','lel','coffee','andri','noice', 'hue', 'oi')
 prefixes = (':','!','.',';')
 commands = ('weather', 'np', 'raw')
 
@@ -363,7 +363,10 @@ class pybot():
         while ((output == "") or (output == " ")):
             output = random.choice(shoutDB)
         if msg not in shoutDB[:-1] or msg not in [" ", ""]:
-            print(str(msg).strip("\r\n")[:-1], file=shoutDatabase, end="")
+            dbMessage = str(msg)
+            dbMessageClean = dbMessage.strip("\r\n")
+            dbMessageClean = dbMessageClean[:-1]
+            print(dbMessageClean, end=' ', file=shoutDatabase)
         shoutDatabase.close()
         
         return output
