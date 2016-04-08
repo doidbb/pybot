@@ -1,4 +1,4 @@
-pybot
+OH GOD I'VE LEARNT AT UNIVERSITY AND THIS IS HORRIBLE
 =====
 A crude attempt to recreate the bash monstrosity known as sadbot
 
