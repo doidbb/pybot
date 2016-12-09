@@ -1,4 +1,4 @@
-﻿#!/usr/bin/python3
+﻿#!/usr/bin/env python
 import socket, re, requests, json, random, os, os.path, random,datetime
 from bs4 import BeautifulSoup
 from PIL import Image
@@ -10,8 +10,13 @@ triggers = ('woof', 'kek','lel','coffee','andri','noice', 'hue', 'oi')
 prefixes = (':','!','.',';')
 commands = ('weather', 'np', 'raw')
 
+"""
+class ingMsg():
+    def __init(self, chan, cmd, nick, )
+"""
+
 class pybot():
-    global sender 
+    global sender
     sender = True
     def __init__(self, nick, server, port):
         self.nick   = nick
@@ -19,7 +24,7 @@ class pybot():
         self.port   = port
     """
     subroutine init_conn()
-    initialises a socket connection 
+    initialises a socket connection
     sets the bot's ident
     """
     def init_conn(self):
@@ -30,11 +35,11 @@ class pybot():
         usersend = 'USER ' + self.nick + ' 8 * :  ' + self.nick
         print(nicksend)
         print(usersend)
-        self.sendmsg(nicksend, "", "msg") 
-        self.sendmsg(usersend, "", "msg") 
+        self.sendmsg(nicksend, "", "msg")
+        self.sendmsg(usersend, "", "msg")
     """
     subroutine chan_join
-    iterates through a given list of channels 
+    iterates through a given list of channels
     signals irc to join said channels
     """
     def chan_join(self, listchans):
@@ -62,7 +67,7 @@ class pybot():
     """
     subroutine showdata
     infinite loop, recieves data then prints it to terminal
-    todo: 
+    todo:
         pretty formatting
     """
     def showdata(self):
@@ -76,7 +81,7 @@ class pybot():
     like sadbot, modules/functions will be called with args
     args are data but data needs to be parsed
     regex is magic
-    todo: 
+    todo:
         error testing
     """
     def parse(self, parseData):
@@ -94,14 +99,14 @@ class pybot():
                 msg += i + " "
             chan = mydta[2]
             cmd  = mydta[3:]
-            #cmd = 
+            #cmd =
         else:
             msg  = "nnull" #informs user in terminal that the message is null - nn is due to concat at front (1:)
-            chan = "null" 
+            chan = "null"
         #print("msg1 is: " + msg[1:])
         if cmd:
             cmdd = cmd[0][1:] #i am so hack i am so hack
-            cmdd = cmdd.strip("\r\n") 
+            cmdd = cmdd.strip("\r\n")
         #    print("\n")
         else:
             cmdd = "null"
@@ -112,6 +117,7 @@ class pybot():
         if join:
             if chan in chans:
                 if len(parseData) < 150:
+                    print(listt)
                     self.handle(listt)
     """
    this is a fucking mess
@@ -143,7 +149,7 @@ class pybot():
                     sender = True
         if sender:
             loc = ''.join(listu[1].split(" ")[1])
-            loc = loc.strip('\r\n') 
+            loc = loc.strip('\r\n')
         for pre in prefixes:
             cmd = listu[4]
             if (cmd == pre+"weather") and (sender == True):
@@ -171,7 +177,7 @@ class pybot():
     function youtube
     gets data from youtube link and puts it in chat
     """
-    def parseYouTube(self, url, chan): 
+    def parseYouTube(self, url, chan):
         newsplit = "none"
         split = url.split("https://www.youtube.com/watch?v=")
         if len(split) == 1:
@@ -183,7 +189,7 @@ class pybot():
         if newsplit != "none":
             self.sendmsg(self.youtube(newsplit), chan, "pmsg")
         else:
-            self.chanGrab(url, chan)  
+            self.chanGrab(url, chan)
         #return self.youtube(newsplit)
     def youtube(self, vidID):
         vidUrl = "https://www.googleapis.com/youtube/v3/videos?id=" + vidID +"&part=snippet,contentDetails,statistics,status&key=AIzaSyASyfv2jOYgXdDkttlr5kvOuQMBxSuTpSw" #have my api key its a gift
@@ -258,7 +264,7 @@ class pybot():
     subroutine raw
     prints raw data to channel
     primary use: debugging
-    todo:  
+    todo:
         send to listu 2
         send w/o self.send() as format is already raw
             or re-encode as str for it only to be decoded
@@ -339,7 +345,7 @@ class pybot():
         note to me
         you're lazy, stupid
         fix the regex
-        edit: 
+        edit:
             delegating the fixing to future me
             this code is a fucking mess
             -HJF 20/06/2015
@@ -368,7 +374,7 @@ class pybot():
             dbMessageClean = dbMessageClean[:-1]
             print(dbMessageClean, end=' ', file=shoutDatabase)
         shoutDatabase.close()
-        
+
         return output
     """
     subroutine jsonify
@@ -392,7 +398,7 @@ non class-related items
 initialises bot with own varialbes (perhaps a config file in future)
 should chain init to join to showing data
 """
-newbot = pybot("sadbot", "irc.rizon.net", 6667) 
+newbot = pybot("sadbot", "irc.rizon.net", 6667)
 newbot.init_conn()
 newbot.chan_join(chans)
 newbot.showdata()
