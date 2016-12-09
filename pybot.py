@@ -10,10 +10,30 @@ triggers = ('woof', 'kek','lel','coffee','andri','noice', 'hue', 'oi')
 prefixes = (':','!','.',';')
 commands = ('weather', 'np', 'raw')
 
-"""
-class ingMsg():
-    def __init(self, chan, cmd, nick, )
-"""
+
+class incMsg():
+    def __init__(self, raw, chan, cmd, nick, msg):
+        self.channel = chan
+        self.command = cmd
+        self.sender  = nick
+        self.message = msg
+        self.rawData = raw
+
+class outMsg():
+    def __init__(self, data, channel=""):#, sock):
+        self.content = data
+        self.channel = channel
+    #    self.sock    = sock
+        self.msg     = ""
+    def join(self):
+        return "JOIN " + self.channel
+    def rawMsg(self):
+        return self.content
+    def msgChan(self):
+        return "PRIVMSG " + self.channel + " :" + self.content
+    #def send():
+    #    self.msg += "\r\n"
+    #    self.sock.send(self.msg)
 
 class pybot():
     global sender
@@ -22,21 +42,24 @@ class pybot():
         self.nick   = nick
         self.server = server
         self.port   = port
+        self.conn   = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    def send(self, msg):
+        msg = msg + "\r\n"
+        message = bytes(msg, "utf-8")
+        self.conn.send(message)
     """
     subroutine init_conn()
     initialises a socket connection
     sets the bot's ident
     """
     def init_conn(self):
-        global mysock
-        mysock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #initialise the socket
-        mysock.connect((self.server, self.port)) #connecting to address and port with socket
-        nicksend = 'NICK ' + self.nick
-        usersend = 'USER ' + self.nick + ' 8 * :  ' + self.nick
-        print(nicksend)
-        print(usersend)
-        self.sendmsg(nicksend, "", "msg")
-        self.sendmsg(usersend, "", "msg")
+        #initialise the socket
+        self.conn.connect((self.server, self.port)) #connecting to address and port with socket
+        nicksend = outMsg(('NICK ' + self.nick))
+        usersend = outMsg(('USER ' + self.nick + ' 8 * :  ' + self.nick))
+        #print(nicksend.rawMsg())
+        self.send(nicksend.rawMsg())
+        self.send(usersend.rawMsg())
     """
     subroutine chan_join
     iterates through a given list of channels
@@ -44,13 +67,16 @@ class pybot():
     """
     def chan_join(self, listchans):
         for chan in listchans:
-            self.sendmsg(chan, "", "join")
+            joinCommand = outMsg("", chan)
+            self.send(joinCommand.join())
+            #self.sendmsg(chan, "", "join")
         global join
         join = True
     """
     subroutine sendmsg
     data has to be encoded to bytes before being sent
     shortcut rather than having to encode and send on different lines
+    """
     """
     def sendmsg(self, msgtosend, chan, type):
         if type == "pmsg":
@@ -64,6 +90,7 @@ class pybot():
         else:
             newmsg = bytes(msgsend, "utf-8") #encode data to bytes and sends to open socket
             mysock.send(newmsg)
+    """
     """
     subroutine showdata
     infinite loop, recieves data then prints it to terminal
