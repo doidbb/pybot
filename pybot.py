@@ -6,18 +6,24 @@ from io import StringIO
 from isodate import parse_duration
 chans    = ('#sadbot-dev', '#wormhole')
 images   = ('image/jpeg', 'image/png', 'image/gif','image/jpg')
-triggers = ('woof', 'kek','lel','coffee','andri','noice', 'hue', 'oi')
 prefixes = (':','!','.',';')
 commands = ('weather', 'np', 'raw')
 
 
 class incMsg():
-    def __init__(self, raw, chan, cmd, nick, msg):
+    def __init__(self, raw, chan, cmd, nick, msg, prefix=""):
         self.channel = chan
         self.command = cmd
         self.sender  = nick
         self.message = msg
         self.rawData = raw
+        self.prefix  = prefix
+    def toString(self):
+        print("channel:\t ", self.channel)
+        print("command:\t ", self.command)
+        print("nick:\t\t ", self.sender)
+        print("message:\t ", self.message)
+        print("raw:\t ", self.rawData, end="\n\n")
 
 class outMsg():
     def __init__(self, data, channel=""):#, sock):
@@ -38,11 +44,12 @@ class outMsg():
 class pybot():
     global sender
     sender = True
-    def __init__(self, nick, server, port):
-        self.nick   = nick
-        self.server = server
-        self.port   = port
-        self.conn   = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    def __init__(self, nick, server, port, verbose=False):
+        self.nick    = nick
+        self.server  = server
+        self.port    = port
+        self.conn    = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.verbose = verbose
     def send(self, msg):
         msg = msg + "\r\n"
         message = bytes(msg, "utf-8")
@@ -97,12 +104,11 @@ class pybot():
     todo:
         pretty formatting
     """
-    def showdata(self):
+    def run(self):
         while 1: #loops so program doesn't quit after one msg
-            dta = ""
-            dta = mysock.recv(1024) #recieves data in buffer size 1024
-            print(repr(dta).encode('UTF-8')) #will have to respond upon ping with pong ping
-            self.parse(dta)
+            incomingData = self.conn.recv(1024) #recieves data in buffer size 1024
+            if self.verbose: print(repr(incomingData).encode('UTF-8')) #will have to respond upon ping with pong ping
+            self.parse(incomingData)
     """
     function parse
     like sadbot, modules/functions will be called with args
@@ -126,59 +132,48 @@ class pybot():
                 msg += i + " "
             chan = mydta[2]
             cmd  = mydta[3:]
-            #cmd =
         else:
             msg  = "nnull" #informs user in terminal that the message is null - nn is due to concat at front (1:)
             chan = "null"
-        #print("msg1 is: " + msg[1:])
         if cmd:
             cmdd = cmd[0][1:] #i am so hack i am so hack
             cmdd = cmdd.strip("\r\n")
-        #    print("\n")
         else:
             cmdd = "null"
         if "PING" in mydta:
             self.sendmsg("PONG PING", chan, "msg")
-        #print(msg) #msg[1:] == No text to send then shout again
         listt = [nickV,msg[1:].strip("\r\n"),parseData,chan,cmdd] #indexes 0,1,2,3 are nick, msg, raw, chan, command
-        if join:
-            if chan in chans:
-                if len(parseData) < 150:
-                    print(listt)
-                    self.handle(listt)
+        print("You want this: ", listt[4])
+        curMessage = incMsg(parseData, chan, cmdd, nickV, msg[1:].strip("\r\n"))
+        if (join and (chan in chans) and (len(parseData) < 150)):
+            if self.verbose: print(curMessage.toString())
+            self.handle(curMessage)
     """
    this is a fucking mess
     """
-    def handle(self, listu): #horrible way of working out - todo: dynamic handling of output
+    def handle(self, incoming): #horrible way of working out - todo: dynamic handling of output
         global sender
+        sender = True
         global loc
         loc = ""
+        cmd = incoming.command
         ran1 = random.randint(1,10)
         ran2 = random.randint(1,5)
-        myregex = re.compile("(https?://)?(-\.)?([^\s/?\.#-]+\.?)+(/[^\s]*)")
-        print(listu[4].encode('UTF-8'))
-        splitt = listu[4].split(" ")
-        for i in splitt:
-            matcher = myregex.search(i)
-            if matcher:
-                self.parseYouTube(i, listu[3])
-        print(str(listu[1].split()).encode('utf-8'))
-        for word in triggers:
-            if word in listu[1].split():
-                self.sendmsg("\x03"+str(random.randint(1,7))+word+"\x03"+str(random.randint(1,7))+" "+word+"\x03"+str(random.randint(1,7))+" "+word, listu[3], "pmsg") #shit nigga
-        for cmd in commands:
-            if cmd == listu[4]:
-                loc = listu[1].split(" ")
+        youtubeRegex = re.compile("(https?://)?(-\.)?([^\s/?\.#-]+\.?)+(/[^\s]*)")
+        for word in incoming.command:
+            if youtubeRegex.search(word):
+                self.parseYouTube(word, incoming.channel)#listu[3])
+        for command in commands:
+            if command == incoming.command:
+                loc = incoming.message.split(" ")#listu[1].split(" ")
                 if len(loc) <= 2:
-                    self.sendmsg("invalid args", listu[3], "pmsg")
+                    errorMsg = outMsg("Invalid arguments", incoming.channel)
+                    self.conn.send(errorMsg.msgChan())
                     sender = False
-                else:
-                    sender = True
         if sender:
-            loc = ''.join(listu[1].split(" ")[1])
-            loc = loc.strip('\r\n')
+            loc = ''.join(incoming.message.split(" ")[1]).strip("\r\n")
         for pre in prefixes:
-            cmd = listu[4]
+            #cmd = incoming.command#listu[4]
             if (cmd == pre+"weather") and (sender == True):
                 self.sendmsg(self.weather(loc), listu[3], "pmsg")
             if (cmd == pre+"np") and (sender == True):
@@ -187,17 +182,16 @@ class pybot():
                     self.sendmsg(self.np(loc), listu[3], "pmsg")
                 except requests.exceptions.ConnectionError:
                     self.sendmsg("Error, last.fm is down!", listu[3], "pmsg")
-            cmd = ""
-        if (listu[4] == "raw") and (sender == True):
+        if (cmd == "raw") and (sender == True):
             self.sendmsg(self.raw(listu), listu[3], "pmsg")
-        elif ((listu[4] == ran1) or (listu[4] == ran2)): #this decreases the entropy
+        elif ((cmd == ran1) or (cmd == ran2)): #this decreases the entropy
 
             self.sendmsg("That's numberwang!", listu[3], "pmsg")
             noshout = True
-        elif ((listu[1] == listu[1].upper()) and (len(listu[1]) > 8)):
+        elif ((incoming.message == incoming.message.upper()) and (len(incoming.message) > 8)):
             self.sendmsg(self.shout(listu[1],listu[3]),listu[3], "pmsg")#, "pmsg"
-        if listu[1] == "No Text to send":
-            self.shout(listu[1],listu[3])
+        #if listu[1] == "No Text to send":
+        #    self.shout(listu[1],listu[3])
         noshout = False
 
     """
@@ -425,7 +419,7 @@ non class-related items
 initialises bot with own varialbes (perhaps a config file in future)
 should chain init to join to showing data
 """
-newbot = pybot("sadbot", "irc.rizon.net", 6667)
+newbot = pybot("sadbot", "irc.rizon.net", 6667, True)
 newbot.init_conn()
 newbot.chan_join(chans)
-newbot.showdata()
+newbot.run()
