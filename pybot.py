@@ -4,11 +4,11 @@ from bs4 import BeautifulSoup
 from PIL import Image
 from io import StringIO
 from isodate import parse_duration
-chans    = ('#sadbot-dev', '#wormhole')
+chans    = ('#sadbot-dev', "")#, '#wormhole')
 images   = ('image/jpeg', 'image/png', 'image/gif','image/jpg')
 prefixes = (':','!','.',';')
 commands = ('weather', 'np', 'raw')
-
+moduleDir = "./modules/"
 
 class incMsg():
     def __init__(self, raw, chan, cmd, nick, msg, prefix=""):
@@ -26,10 +26,9 @@ class incMsg():
         print("raw:\t ", self.rawData, end="\n\n")
 
 class outMsg():
-    def __init__(self, data, channel=""):#, sock):
+    def __init__(self, data, channel=""):
         self.content = data
         self.channel = channel
-    #    self.sock    = sock
         self.msg     = ""
     def join(self):
         return "JOIN " + self.channel
@@ -37,9 +36,7 @@ class outMsg():
         return self.content
     def msgChan(self):
         return "PRIVMSG " + self.channel + " :" + self.content
-    #def send():
-    #    self.msg += "\r\n"
-    #    self.sock.send(self.msg)
+
 
 class pybot():
     global sender
@@ -80,25 +77,6 @@ class pybot():
         global join
         join = True
     """
-    subroutine sendmsg
-    data has to be encoded to bytes before being sent
-    shortcut rather than having to encode and send on different lines
-    """
-    """
-    def sendmsg(self, msgtosend, chan, type):
-        if type == "pmsg":
-            msgsend = "PRIVMSG " + chan + " :" + msgtosend + "\r\n"
-        elif type == "join":
-            msgsend = "JOIN " + msgtosend + "\r\n"
-        elif type == "msg":
-            msgsend = msgtosend + "\r\n"
-        if msgtosend == " ":
-            pass
-        else:
-            newmsg = bytes(msgsend, "utf-8") #encode data to bytes and sends to open socket
-            mysock.send(newmsg)
-    """
-    """
     subroutine showdata
     infinite loop, recieves data then prints it to terminal
     todo:
@@ -107,8 +85,8 @@ class pybot():
     def run(self):
         while 1: #loops so program doesn't quit after one msg
             incomingData = self.conn.recv(1024) #recieves data in buffer size 1024
-            if self.verbose: print(repr(incomingData).encode('UTF-8')) #will have to respond upon ping with pong ping
-            self.parse(incomingData)
+            #if self.verbose: print(repr(incomingData).encode('UTF-8')) #will have to respond upon ping with pong ping
+            self.newParsingEngine(incomingData)
     """
     function parse
     like sadbot, modules/functions will be called with args
@@ -117,12 +95,41 @@ class pybot():
     todo:
         error testing
     """
+
+    def newParsingEngine(self, incomingData):
+        decodedIncomingData = incomingData.decode("utf-8")
+        splitData = decodedIncomingData.split(" ")
+        try:
+            possibleChannel = splitData[2]
+        except IndexError:
+            possibleChannel = ""
+        if splitData[1] == "PRIVMSG" and possibleChannel in chans:
+            rawData  = decodedIncomingData
+            channel  = possibleChannel
+            userNick = re.split("\:|\!", splitData[0])
+            userNick = userNick[1]
+            userHost = userNick[2]
+            incomingMessage = ""
+            userCommand = splitData[3][1:]
+            for word in splitData[3:]:
+                incomingMessage += word
+            incomingMessage = incomingMessage[1:]
+            commandPrefix = ""
+            if incomingMessage[1:] in prefixes:
+                commandPrefix = incomingMessage[1:]
+            parsedMessage = incMsg(rawData, channel, userCommand, userNick, incomingMessage, commandPrefix)
+            self.newHandler(parsedMessage)
+
+            def newHandler(self, incomingMessage):
+                pass
+
     def parse(self, parseData):
         global listt
         nickV = ""
         cmd   = ""
         mydta = parseData.decode("utf-8")
         mydta = mydta.split(" ")
+        print("decoded data: ", mydta)
         nickV = re.split("\:|\!",mydta[0])
         if (len(nickV) > 1):  #let's ensure we can write to the terminal before we actually do
             nickV = nickV[1] #removes the ! between name and host, : at the begin to leave us with nick, along with regex magic
@@ -141,13 +148,15 @@ class pybot():
         else:
             cmdd = "null"
         if "PING" in mydta:
-            self.sendmsg("PONG PING", chan, "msg")
+            pong = outMsg("PONG PING")
+            self.send(pong.rawMsg)
+            #self.sendmsg("PONG PING", chan, "msg")
         listt = [nickV,msg[1:].strip("\r\n"),parseData,chan,cmdd] #indexes 0,1,2,3 are nick, msg, raw, chan, command
-        print("You want this: ", listt[4])
+        #print("You want this: ", listt[4])
         curMessage = incMsg(parseData, chan, cmdd, nickV, msg[1:].strip("\r\n"))
         if (join and (chan in chans) and (len(parseData) < 150)):
             if self.verbose: print(curMessage.toString())
-            self.handle(curMessage)
+            #self.handle(curMessage)
     """
    this is a fucking mess
     """
@@ -188,8 +197,8 @@ class pybot():
 
             self.sendmsg("That's numberwang!", listu[3], "pmsg")
             noshout = True
-        elif ((incoming.message == incoming.message.upper()) and (len(incoming.message) > 8)):
-            self.sendmsg(self.shout(listu[1],listu[3]),listu[3], "pmsg")#, "pmsg"
+        #elif ((incoming.message == incoming.message.upper()) and (len(incoming.message) > 8)):
+        #    self.sendmsg(self.shout(listu[1],listu[3]),listu[3], "pmsg")#, "pmsg"
         #if listu[1] == "No Text to send":
         #    self.shout(listu[1],listu[3])
         noshout = False
